@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tekion-app.fullname" . }}
+  labels:
+    {{- include "tekion-app.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "tekion-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "tekion-app.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "tekion-app.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: MYSQLHOST
+            value: mydb-mysql
+          - name: MYSQLDB
+            value: teslatest
+          - name: MYSQLPASS
+            value: Alfa@123
+          - name: MYSQLUNAME
+            value: root
+          - name: MYSQLPORT
+            value: "3306"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+{{- range $i, $port := .Values.extraPorts }}
+            - name: {{ $port.name }}
+              containerPort: {{ $port.targetPort }}
+              protocol: {{ default "TCP" $port.protocol }}
+{{- end }}
+{{- if or .Values.volumeMounts .Values.extraVolumeMounts }}
+          volumeMounts:
+{{- range $i, $volumeMount := .Values.volumeMounts }}
+          - name: {{ $volumeMount.name }}
+            mountPath: {{ $volumeMount.mountPath }}
+{{- end }}
+{{- end }}
+          livenessProbe:
+            httpGet:
+              path: /teslaDyDB/
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /teslaDyDB/
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: sidecar-log-collector
+          image: vinga2805/tekion-fluent:v1
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: 100m
+              memory: 200Mi
+          volumeMounts:
+            - name: log-storage
+              mountPath: /mnt
+      volumes:
+        - name: log-storage
+          emptyDir: {}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

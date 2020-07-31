@@ -1,0 +1,50 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: tesla-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: kibana.vinga.tk
+    http:
+      paths:
+      - backend:
+          serviceName: kibana-kibana
+          servicePort: 5601
+        path: /
+  - host: nginx.vinga.tk
+    http:
+      paths:
+      - backend:
+          serviceName: nginx 
+          servicePort: 80
+        path: /
+  - host: tekion.vinga.tk
+    http:
+      paths:
+      - backend:
+          serviceName: tekion-tekion-app 
+          servicePort: 80
+        path: /
+  - host: prometheus.vinga.tk
+    http:
+      paths:
+      - backend:
+          serviceName: prometheus-server
+          servicePort: 80
+        path: /
+  - host: grafana.vinga.tk
+    http:
+      paths:
+      - backend:
+          serviceName: grafana
+          servicePort: 80
+        path: /       
+  - host: nginx.vinga.tk
+    http:
+      paths:
+      - backend:
+          serviceName: nginx
+          servicePort: 80
+        path: / 
