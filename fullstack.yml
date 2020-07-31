@@ -1,0 +1,78 @@
+---
+- hosts: localhost
+  become: true
+  tasks:
+    - name: Check if kubectl is installed
+      command: kubectl version --short
+      become_user: ubuntu
+      register: kube_version
+    - name: Install kubectl
+      shell: curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+      when: kube_version.rc==1
+    - name: Granting exec permission 
+      file:
+        path: ./kubectl
+        mode: '775'
+      when: kube_version.rc==1
+    - name: Moving executable to bin folder
+      command: mv kubectl /usr/local/bin/
+      when: kube_version.rc==1
+    - name: Check if helm3 is installed
+      command: helm version --short
+      register: helm_version
+      become_user: ubuntu
+    - name: Retrieve helm binary archive.
+      unarchive:
+        src: https://get.helm.sh/helm-v3.2.4-linux-amd64.tar.gz
+        dest: /tmp
+        creates: /usr/local/bin/helm
+        remoe_src: yes
+      when: helm_version.rc==1
+    - name: Move helm binary into place.
+      command: cp /tmp/linux-amd64/helm /usr/local/bin/helm
+      args:
+        creates: /usr/local/bin/helm
+      when: helm_version.rc==1
+    - name: Install pip 
+      apt: 
+        name: "{{ item }}"
+        update_cache: yes
+      with_items:
+           - python-pip
+           - python3-pip
+
+    - name: Create namespace
+      command: kubectl create ns tesla
+      become_user: ubuntu
+      ignore_errors: yes
+
+    - name: Install ElastiSearchhelm chart from a git repo
+      shell: helm install es elasticsearch -n tesla
+      become_user: ubuntu
+
+    - name: Install Kibana chart from a git repo
+      shell: helm install kibana kibana -n tesla
+      become_user: ubuntu
+
+    - name: Install prometheus chart from a git repo
+      shell: helm install prometheus prometheus -n tesla
+      become_user: ubuntu
+    - name: Install grafana chart from a git repo
+      shell: helm install grafana grafana -n tesla
+      become_user: ubuntu
+    - name: Install mysql chart from a git repo
+      shell: helm install mydb mysql -n tesla
+      become_user: ubuntu
+    - name: Install tekion chart from a git repo
+      shell: helm install tekion tekion-app -n tesla
+      become_user: ubuntu
+    - name: Install ingress 
+      shell: kubectl apply -f ingress.yaml -n tesla
+      become_user: ubuntu
+
+
+
+
+
+
+

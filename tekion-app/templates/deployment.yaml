@@ -71,7 +71,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
         - name: sidecar-log-collector
-          image: vinga2805/tekion-fluent:v1
+          image: vinga2805/tekion-fluent:v6
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             limits:
