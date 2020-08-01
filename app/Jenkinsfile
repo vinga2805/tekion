@@ -49,11 +49,21 @@ pipeline {
                 }
             }
         }
-        stage('Cleaning images from Jenkins') {
-            
+        stage('Cleaning images from Jenkins') {         
             steps {
                 sh "docker rmi ${imageFullName}"
             }
+        }
+        stage ('Update Image tags in chart repository') {
+            steps {
+                script {
+                    echo "----I AM Executing----"
+                    sh """#!/bin/bash -x
+                    pip install pyyaml
+                    pip install pybump
+                    python update_image.py ${imageFullName}                
+                }            
+            }       
         }
     }
 }
