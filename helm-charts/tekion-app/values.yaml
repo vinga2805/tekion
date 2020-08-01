@@ -7,9 +7,9 @@ autoscaling:
 envProperties:
   MYSQLDB: teslatest
   MYSQLHOST: mydb-mysql
+  MYSQLPASS: Alfa@123
   MYSQLPORT: '3306'
   MYSQLUNAME: root
-  MYSQLPASS: Alfa@123
 extraPorts:
 - name: metrics
   port: 9012
@@ -18,7 +18,7 @@ fullnameOverride: ''
 image:
   pullPolicy: IfNotPresent
   repository: vinga2805/tekion
-  tag: snapshot_0.0.1_master_4aee9d5
+  tag: snapshot_0.0.1_master_e82a644
 imagePullSecrets: []
 ingress:
   annotations:
