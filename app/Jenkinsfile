@@ -2,6 +2,8 @@ def pomPath = "app/pom.xml"
 def app = "tekion"
 def repoFullName = "vinga2805/tekion"
 def gitBranch = "master"
+def registry = ${repoFullName}
+def registryCredential = 'docker_cred'
 pipeline {
     agent any
     stages{
@@ -36,7 +38,11 @@ pipeline {
         }
         stage('Publish artifacts'){
             steps{
-                sh "docker push ${imageFullName}"
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                    dockerImage.push()
+                    }              
+                }
             }
         }
     }
