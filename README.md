@@ -4,7 +4,7 @@
 - ansible version > 2.9
 - Route53 entry vinga.tk
 - Kubernets 3 node cluster.(Tested on AWS KOPS version 
-### steps
+### steps:
 
 ``` git clone https://github.com/vinga2805/tekion.git ```
 
@@ -20,11 +20,50 @@
 - MysqlDB for storing the user and audit data.
 - Tekion application for creating DynamoDB via UI and template.
 
+### Output
+- Once the playbook run successfully below urls will be automatically configured in r53 with nginx ingress.
+- http://prometheus.vinga.tk
+- http://grafana.vinga.tk
+- http://kibana.vinga.tk
+- http://tekion.vinga.tk/teslaDyDB
+
 
 ## Continous Integration and Deployment
 ### Requirements
 - Jenkins server with below plugins installed
-  - Docker pipeline plugin
+  - Docker pipeline 
   - Github Authentication
-- Maven with version 
+  - pipeline
+- Maven with version 3.6.0
+- Java openjdk 1.8.0_252
+
+### Steps:
+- Create a Jenkins pipeline Job and with below Jenkinsfile in "pipeline script from SCM"
+  - app/Jenkinsfile
+  
+### Whats included ?
+- Dockerfile for application.
+- Dockerfile for fluentbit which will be running as a sidecar.
+- Jenkinsfile to perform CI and CD
+- update_image.py for updating the image in helm chart.
+
+### What does it do?
+- Clone the repo
+- Build the jar file with maven
+- Build the Docker image and names it accoring to the environment.
+  - SNAPSHOT --> ${pomVersion}-snapshot.${gitBranch}.${shortCommit}
+  - release  --> ${pomVersion}
+- Push the built image with dockerhub with my credentials.
+- Remove the image from Jenkins box
+- Clone the same repo in subdirectory values-files
+- Update the tag in the values.yaml 
+- Deploys the application via Helm if its first time otherwise it upgrades the helm chart
+- Perform healthcheck of the application
+- If the Healthcheck passes then it will push the changes in github
+- If the Healthcheck fails it performs rollback via helm.
+
+
+
+
+
 
