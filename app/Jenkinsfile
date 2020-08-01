@@ -1,0 +1,43 @@
+def pomPath = "pom.xml"
+def app = "tekion"
+def repoFullName = "vinga2805/tekion"
+pipeline {
+    agent any
+    stages{
+        stage('Build Jar'){
+            steps {
+                scripts {
+                    def pomVersion = readMavenPom(file: "$pomPath").getVersion()
+                    def version = "${pomVersion}"
+                    def lastCommitHash = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%H'").trim()
+                    def lastCommitAuthorEmail = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%ae'").trim()
+                    if (pomVersion.endsWith("-SNAPSHOT")) {
+                        echo "Snapshot version detected"
+                        shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+                        gitBranch = pipelineParams.gitBranch ? pipelineParams.gitBranch : gitBranch
+                        gitBranch = gitBranch.substring(gitBranch.indexOf('/') + 1)
+                        pomVersion = pomVersion.substring(0, pomVersion.indexOf('-'))
+                        imageFullName = "${repoFullName}" + ":" + "snapshot_${pomVersion}_${gitBranch}_${shortCommit}"
+                        artifactVersion = "${pomVersion}-snapshot.${gitBranch}.${shortCommit}"
+                    } else {
+                        echo "Proper release detected"
+                        imageFullName = "${repoFullName}" + ":" + "${pomVersion}"
+                        artifactVersion = "${pomVersion}"
+                    }
+                }
+                sh 'mvn clean package'
+            }
+
+        }
+        stage('Create image') {
+            steps {
+                sh "docker build -t ${imageFullName} ."
+            }
+        }
+        stage('Publish artifacts'){
+            steps{
+                sh "docker push ${imageFullName}"
+            }
+        }
+    }
+}
