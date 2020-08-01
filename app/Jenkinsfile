@@ -10,11 +10,6 @@ def namespace = "tesla"
 pipeline {
     agent any
     stages{
-        stage('Clone Repo') {
-            steps {
-                sh "git clone ${valuesRepo}"
-            }
-        }
         stage('Build Jar'){
             steps {
                 script {
@@ -107,11 +102,13 @@ pipeline {
                           git add .
                           git commit -m "adding updated image"
                           git push git@github.com:vinga2805/tekion.git 
+                          cd ..
                           else
                           echo "Application healthcheck is unsuccessful."
                           echo "Rolling back the application..."
                           helm rollback ${app} -n ${namespace}
                           fi
+                          rm -rf values-files
                        """
                      }
                 }
