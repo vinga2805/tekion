@@ -35,7 +35,7 @@ pipeline {
         stage('Create image') {
             steps {
                 script {
-                    dockerImage = docker.build "${imageFullName}"
+                    dockerImage = docker.build("${imageFullName}", "./app/")
                 }
                 
             }
