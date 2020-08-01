@@ -1,4 +1,4 @@
-def pomPath = "pom.xml"
+def pomPath = "app/pom.xml"
 def app = "tekion"
 def repoFullName = "vinga2805/tekion"
 pipeline {
