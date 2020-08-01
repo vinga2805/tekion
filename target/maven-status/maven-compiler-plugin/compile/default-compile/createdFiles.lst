@@ -1,9 +1,0 @@
-main/java/bean/LoginBean.class
-main/java/bean/RegisterBean.class
-main/java/controller/RegisterServlet.class
-main/java/dao/MysqlDao.class
-main/java/util/DBConnection.class
-main/java/controller/ListTableServlet.class
-main/java/controller/LogoutServlet.class
-main/java/controller/CreateTableServlet.class
-main/java/controller/LoginServlet.class
