@@ -1,6 +1,7 @@
 def pomPath = "app/pom.xml"
 def app = "tekion"
 def repoFullName = "vinga2805/tekion"
+def gitBranch = "master"
 pipeline {
     agent any
     stages{
@@ -14,7 +15,6 @@ pipeline {
                     if (pomVersion.endsWith("-SNAPSHOT")) {
                         echo "Snapshot version detected"
                         shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
-                        gitBranch = pipelineParams.gitBranch ? pipelineParams.gitBranch : gitBranch
                         gitBranch = gitBranch.substring(gitBranch.indexOf('/') + 1)
                         pomVersion = pomVersion.substring(0, pomVersion.indexOf('-'))
                         imageFullName = "${repoFullName}" + ":" + "snapshot_${pomVersion}_${gitBranch}_${shortCommit}"
