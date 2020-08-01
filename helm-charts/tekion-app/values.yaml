@@ -14,6 +14,13 @@ image:
   repository: vinga2805/tekion
   tag: snapshot_0.0.1_master_adff445
 imagePullSecrets: []
+
+envProperties:
+    MYSQLHOST: mydb-mysql
+    MYSQLDB: teslatest
+    MYSQLUNAME: root
+    MYSQLPORT: "3306"
+    MYSQLPASS: "Alfa@123"
 ingress:
   annotations:
     kubernetes.io/ingress.class: nginx
