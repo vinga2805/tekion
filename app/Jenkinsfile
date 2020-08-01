@@ -80,7 +80,7 @@ pipeline {
                        helm upgrade ${app} values-files/helm-charts/tekion-app/ -n ${namespace}
                        else 
                        echo "Chart is not running"
-                       helm install ${app} value-files/helm-charts/tekion-app/ -n ${namespace}
+                       helm install ${app} values-files/helm-charts/tekion-app/ -n ${namespace}
                        fi
                     """ 
                 }
