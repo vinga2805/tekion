@@ -37,7 +37,6 @@ def pushToBitBucket():
             git config --global user.email 'you@example.com' && \
             git config --global user.name 'jenkins@zeta.tech' && \
             git commit -m 'Commit from JenkinsBot to update ValuesFile' && \
-            git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/tekion.git
             """
         process = subprocess.Popen(
             commands,
