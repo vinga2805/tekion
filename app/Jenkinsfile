@@ -2,7 +2,7 @@ def pomPath = "app/pom.xml"
 def app = "tekion"
 def repoFullName = "vinga2805/tekion"
 def gitBranch = "master"
-def registry = ${repoFullName}
+def registry = "${repoFullName}"
 def registryCredential = 'docker_cred'
 pipeline {
     agent any
