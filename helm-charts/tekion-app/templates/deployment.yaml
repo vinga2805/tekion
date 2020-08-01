@@ -34,6 +34,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+          envFrom:
 {{- if .Values.envProperties }}
           - configMapRef:
               name: {{ .Chart.Name }}-env-configmap
@@ -56,11 +57,11 @@ spec:
 {{- end }}
           livenessProbe:
             httpGet:
-              path: {{ default "/teslaDyDB/healtcheck" .Values.service.healthCheckPath }}
+              path: {{ default "/teslaDyDB/healthcheck" .Values.service.healthCheckPath }}
               port: http
           readinessProbe:
             httpGet:
-              path: {{ default "/teslaDyDB/healtcheck" .Values.service.healthCheckPath }}
+              path: {{ default "/teslaDyDB/healthcheck" .Values.service.healthCheckPath }}
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
