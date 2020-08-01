@@ -101,7 +101,7 @@ pipeline {
                           git checkout master
                           git add .
                           git commit -m "adding updated image"
-                          git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/tekion.git 
+                          git push git@github.com:vinga2805/tekion.git 
                           else
                           echo "Application healthcheck is unsuccessful."
                           echo "Rolling back the application..."
