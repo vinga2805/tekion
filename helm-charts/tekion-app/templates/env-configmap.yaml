@@ -10,4 +10,3 @@ data:
 {{ printf "%s: %s" ($key | quote) ($val | quote) | indent 2 }}
 {{- end }}
 {{- end }}
-{{- end }}
