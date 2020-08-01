@@ -7,6 +7,7 @@ def registry = "${repoFullName}"
 def registryCredential = 'docker_cred'
 def dockerImage = ''
 def namespace = "tesla"
+def status = ''
 pipeline {
     agent any
     stages{
