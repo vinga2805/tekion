@@ -21,7 +21,7 @@ def update_image_tags(filePath, imageTag):
                 yamlFile.write(yaml.dump(data, sort_keys=True))
             print("Bumping up the chart version!!")
             os.system('pybump bump --file values-files/helm-charts/tekion-app/Chart.yaml --level patch')
-            #pushToBitBucket()
+            pushToBitBucket()
             print ("Updated the image")
             return
 
