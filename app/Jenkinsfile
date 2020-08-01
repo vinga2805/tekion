@@ -6,6 +6,7 @@ def gitBranch = "master"
 def registry = "${repoFullName}"
 def registryCredential = 'docker_cred'
 def dockerImage = ''
+def namespace = "tesla"
 pipeline {
     agent any
     stages{
@@ -59,16 +60,57 @@ pipeline {
             steps {
                 script {
                     echo "----I AM Executing----"
-                    withCredentials([usernamePassword(credentialsId: 'github_cred', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                       sh """#!/bin/bash -x
                          pip install pyyaml
                          pip install pybump
                          git clone ${valuesRepo} values-files
                          python update_image.py ${imageFullName}
                       """
-                    }
                 }            
             }       
+        }
+        stage ('Deploying application'){
+            steps {
+                script {
+                    echo "-----Deploying helm chart"
+                    sh """#!/bin/bash -x
+                       if [ `helm list -n ${namespace} | grep ${app} | wc -l` == 1 ]
+                       then 
+                       echo "chart already running"
+                       helm upgrade ${app} values-files/helm-charts/tekion-app/ -n ${namespace}
+                       else 
+                       echo "Chart is not running"
+                       helm install ${app} value-files/helm-charts/tekion-app/ -n ${namespace}
+                       fi
+                    """ 
+                }
+            }
+        }
+        stage ('health-check') {
+            steps {
+                script {
+                     echo "Wait performing healthcheck...."
+                     withCredentials([usernamePassword(credentialsId: 'github_cred', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                       sh """#!/bin/bash -x
+                          sleep 60
+                          if [ `curl -Iks http://tekion.vinga.tk/teslaDyDB/ | head -1 | cut -d " " -f2` == "200" ]
+                          then 
+                          echo "Application healthcheck is successful"
+                          echo "Application deployed successfully"
+                          cd values-files
+                          git checkout master
+                          git add .
+                          git commit -m "adding updated image"
+                          git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/tekion.git 
+                          else
+                          echo "Application healthcheck is unsuccessful."
+                          echo "Rolling back the application..."
+                          helm rollback ${app} -n ${namespace}
+                          fi
+                       """
+                     }
+                }
+            }
         }
     }
 }
