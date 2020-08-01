@@ -34,6 +34,16 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+          - name: MYSQLUNAME
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Chart.Name }}-secret
+                key: user
+          - name: MYSQLPASS
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Chart.Name }}-secret
+                key: password
           envFrom:
 {{- if .Values.envProperties }}
           - configMapRef:
