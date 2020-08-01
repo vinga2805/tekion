@@ -22,7 +22,7 @@ def update_image_tags(filePath, imageTag):
             print("Bumping up the chart version!!")
             os.system('pybump bump --file helm-charts/tekion-app/Chart.yaml --level patch')
             #pushToBitBucket()
-            print ("Updated {}: {}".format(imageTag))
+            print ("Updated the image")
             return
 
 def pushToBitBucket():
