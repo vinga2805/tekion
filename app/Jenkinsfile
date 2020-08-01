@@ -31,7 +31,7 @@ pipeline {
         }
         stage('Create image') {
             steps {
-                sh "docker build -t ${imageFullName} ."
+                sh "docker build -t ${imageFullName} ./app/"
             }
         }
         stage('Publish artifacts'){
