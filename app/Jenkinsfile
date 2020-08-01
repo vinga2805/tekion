@@ -10,6 +10,11 @@ def namespace = "tesla"
 pipeline {
     agent any
     stages{
+        stage('Clone Repo') {
+            steps {
+                git ${valuesRepo}
+            }
+        }
         stage('Build Jar'){
             steps {
                 script {
