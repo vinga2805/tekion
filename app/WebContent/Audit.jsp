@@ -5,7 +5,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>List</title>
+<title>Audit Dashboard</title>
 <style>
 table {
 	font-family: arial, sans-serif;
@@ -35,7 +35,7 @@ tr:nth-child(even) {
 			}
 		}
 		if (userName == null) {
-			response.sendRedirect("Login.jsp");
+			response.sendRedirect("login");
 		}
 	%>
 	<%
@@ -43,15 +43,15 @@ tr:nth-child(even) {
 		ResultSet resultSet = mysqlDao.getTableList("");
 	%>
 	<center>
-		<h2>Table Dashboard</h2>
+		<h2>Audit Dashboard</h2>
 	</center>
 
 	<div style="text-align: right">
 		Welcome
 		<%=userName%>
-		<a href="LogoutServlet"> Logout</a>
+		<a href="logout"> Logout</a>
 	</div>
-	<h2>Table List</h2>
+	<h2>All Tables</h2>
 
 	<table>
 		<tr>
@@ -74,7 +74,7 @@ tr:nth-child(even) {
 		<%
 			rowCount++;
 				}
-				if (rowCount==0) {
+				if (rowCount == 0) {
 		%>
 		<tr>
 			<td colspan="4" style="text-align: center;">Tables Not Available</td>

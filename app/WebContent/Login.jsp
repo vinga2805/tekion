@@ -50,7 +50,7 @@ function validate()
         </table>
         
     </form>
-    <p style="margin-left:50px;"><a href="Register.jsp">Create New Account</a></p>
+    <p style="margin-left:50px;"><a href="register">Create New Account</a></p>
     </div>
 </body>
 </html>

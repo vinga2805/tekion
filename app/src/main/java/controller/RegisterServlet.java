@@ -23,6 +23,7 @@ public class RegisterServlet extends HttpServlet {
 		String password = request.getParameter("password");
 		String accesskey = request.getParameter("accesskey");
 		String secretKey = request.getParameter("secretKey");
+		String region = request.getParameter("region");
 
 		RegisterBean registerBean = new RegisterBean();
 		registerBean.setFullName(fullName);
@@ -31,6 +32,7 @@ public class RegisterServlet extends HttpServlet {
 		registerBean.setPassword(password);
 		registerBean.setAccesskey(accesskey);
 		registerBean.setSecretkey(secretKey);
+		registerBean.setRegion(region);
 
 		MysqlDao mysqlDao = new MysqlDao();
 
@@ -38,11 +40,12 @@ public class RegisterServlet extends HttpServlet {
 
 		if (userRegistered.equals("SUCCESS")) // On success, you can display a message to user on Home page
 		{
-			request.getRequestDispatcher("/Login.jsp").forward(request, response);
+			response.sendRedirect("login");
+			//request.getRequestDispatcher("/login").forward(request, response);
 		} else // On Failure, display a meaningful message to the User.
 		{
 			request.setAttribute("errMessage", userRegistered);
-			request.getRequestDispatcher("/Register.jsp").forward(request, response);
+			request.getRequestDispatcher("/register").forward(request, response);
 		}
 	}
 }

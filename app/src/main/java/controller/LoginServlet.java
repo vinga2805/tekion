@@ -36,14 +36,14 @@ public class LoginServlet extends HttpServlet {
 			loginCookie.setMaxAge(30 * 60);
 			response.addCookie(loginCookie);
 			if (userName.equals("admin")) {
-				response.sendRedirect("List.jsp");
+				response.sendRedirect("audit");
 			} else {
-				response.sendRedirect("Home.jsp");
+				response.sendRedirect("home");
 			}
 		} else {
 			logger.info("Erros in Login: " + userValidate);
 			request.setAttribute("errMessage", userValidate);
-			request.getRequestDispatcher("/Login.jsp").forward(request, response);
+			request.getRequestDispatcher("/login").forward(request, response);
 		}
 	}
 }

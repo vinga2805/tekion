@@ -19,8 +19,12 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndex;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.Projection;
+import com.amazonaws.services.dynamodbv2.model.ProjectionType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 
@@ -28,7 +32,13 @@ import main.java.dao.MysqlDao;
 
 public class CreateTableServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-	final static Logger logger = Logger.getLogger(LoginServlet.class.getName());
+	final static Logger logger = Logger.getLogger(CreateTableServlet.class.getName());
+	private ProjectionType projectedAttr = ProjectionType.ALL;
+	private long readCapacity = 5L;
+	private long writeCapacity = 5L;
+	private boolean isIndex = false;
+	private boolean isCapaity = true;
+	private String nonkeyAttr = "";
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -36,7 +46,7 @@ public class CreateTableServlet extends HttpServlet {
 		String userName = request.getParameter("username");
 		List<String> awsCreds = mysqlDao.getAwsCred(userName);
 		BasicAWSCredentials credentials = new BasicAWSCredentials(awsCreds.get(0), awsCreds.get(1));
-		AmazonDynamoDBClient client = new AmazonDynamoDBClient(credentials).withRegion(Regions.US_EAST_1);
+		AmazonDynamoDBClient client = new AmazonDynamoDBClient(credentials).withRegion(getRegion(awsCreds.get(2)));
 		DynamoDB dynamoDB = new DynamoDB(client);
 		String status = "fail";
 		if (request.getParameter("ftype").equals("custom")) {
@@ -61,47 +71,144 @@ public class CreateTableServlet extends HttpServlet {
 			if (dt != null) {
 				listDT.add(dt);
 			}
+			if (!request.getParameter("sortingkey").isEmpty()) {
+				if (request.getParameter("sortingDataType").equals("number")) {
+					ckey = new KeySchemaElement(request.getParameter("sortingkey"), KeyType.RANGE);
+					dt = new AttributeDefinition(request.getParameter("sortingkey"), ScalarAttributeType.N);
+				} else if (request.getParameter("sortingDataType").equals("string")) {
+					ckey = new KeySchemaElement(request.getParameter("sortingkey"), KeyType.RANGE);
+					dt = new AttributeDefinition(request.getParameter("sortingkey"), ScalarAttributeType.S);
+				} else if (request.getParameter("sortingDataType").equals("bytebuffer")) {
+					ckey = new KeySchemaElement(request.getParameter("sortingkey"), KeyType.RANGE);
+					dt = new AttributeDefinition(request.getParameter("sortingkey"), ScalarAttributeType.B);
+				}
 
-			if (request.getParameter("sortingDataType").equals("number")) {
-				ckey = new KeySchemaElement(request.getParameter("sortingkey"), KeyType.RANGE);
-				dt = new AttributeDefinition(request.getParameter("sortingkey"), ScalarAttributeType.N);
-			} else if (request.getParameter("sortingDataType").equals("string")) {
-				ckey = new KeySchemaElement(request.getParameter("sortingkey"), KeyType.RANGE);
-				dt = new AttributeDefinition(request.getParameter("sortingkey"), ScalarAttributeType.S);
-			} else if (request.getParameter("sortingDataType").equals("bytebuffer")) {
-				ckey = new KeySchemaElement(request.getParameter("sortingkey"), KeyType.RANGE);
-				dt = new AttributeDefinition(request.getParameter("sortingkey"), ScalarAttributeType.B);
+				if (ckey != null) {
+					listCl.add(ckey);
+				}
+				if (dt != null) {
+					listDT.add(dt);
+				}
 			}
-
-			if (ckey != null) {
-				listCl.add(ckey);
+			CreateTableRequest awsrequest = new CreateTableRequest().withTableName(tableName).withKeySchema(listCl)
+					.withAttributeDefinitions(listDT);
+			List<KeySchemaElement> indexkey = new ArrayList<KeySchemaElement>();
+			String indexName = "";
+			boolean isSec = false;
+			if (request.getParameter("settingtype").equals("custom")) {
+				projectedAttr = getProjectedAttr(request.getParameter("projattr"));
+				isIndex = true;
+				readCapacity = Long.parseLong(request.getParameter("readcapacity"));
+				writeCapacity = Long.parseLong(request.getParameter("writecapacity"));
+				indexName = request.getParameter("indexname");
+				if (request.getParameter("nonkeyAttr") != null) {
+					nonkeyAttr = request.getParameter("nonkeyAttr");
+				}
+				indexkey.add(new KeySchemaElement(request.getParameter("indexpartitionkey"), KeyType.HASH));
+				if (!request.getParameter("indexsortingkey").isEmpty()) {
+					isSec = true;
+					indexkey.add(new KeySchemaElement(request.getParameter("indexsortingkey"), KeyType.RANGE));
+				}
 			}
-			if (dt != null) {
-				listDT.add(dt);
+			if (isCapaity) {
+				awsrequest.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(readCapacity)
+						.withWriteCapacityUnits(writeCapacity));
 			}
-
-			List<String> messageList = createTableCustom(listCl, listDT, tableName, dynamoDB);
+			if (isIndex) {
+				GlobalSecondaryIndex precipIndex = new GlobalSecondaryIndex().withIndexName(indexName)
+						.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits((long) 10)
+								.withWriteCapacityUnits((long) 1));
+				if (!nonkeyAttr.isEmpty()) {
+					precipIndex.withProjection(
+							new Projection().withProjectionType(projectedAttr).withNonKeyAttributes(nonkeyAttr));
+				} else {
+					precipIndex.withProjection(new Projection().withProjectionType(projectedAttr));
+				}
+				ArrayList<KeySchemaElement> indexKeySchema = new ArrayList<KeySchemaElement>();
+				indexKeySchema.add(indexkey.get(0)); // Partition key
+				if (isSec) {
+					indexKeySchema.add(indexkey.get(1)); // Sort key
+				}
+				precipIndex.setKeySchema(indexKeySchema);
+				awsrequest.withGlobalSecondaryIndexes(precipIndex);
+			}
+			List<String> messageList = createTableCustom(tableName, awsrequest, dynamoDB);
 			logger.info(messageList);
 			if (messageList.get(0).equals("Table created successfully")) {
 				status = mysqlDao.addTable(userName, messageList.get(1));
 			}
 		} else {
 			String jsonData = request.getParameter("jsonTemplate");
-			List<String> messageList = createTable(jsonData, dynamoDB);
+			List<String> messageList = createTable(jsonData, dynamoDB, readCapacity, writeCapacity, projectedAttr,
+					isIndex, isCapaity, nonkeyAttr);
 			logger.info(messageList);
 			if (messageList.get(0).equals("Table created successfully")) {
 				status = mysqlDao.addTable(userName, messageList.get(1));
 			}
 		}
-		response.sendRedirect("Home.jsp?status=" + status);
+		response.sendRedirect("home?status=" + status);
 	}
 
-	private List<String> createTableCustom(List<KeySchemaElement> listCl, List<AttributeDefinition> listDT,
-			String tableName, DynamoDB dynamoDB) {
+	private Regions getRegion(String region) {
+		Regions awsRegion = null;
+		// TODO Auto-generated method stub
+		switch (region) {
+		case "us-east-2":
+			awsRegion = Regions.US_EAST_2;
+			break;
+		case "us-east-1":
+			awsRegion = Regions.US_EAST_1;
+			break;
+		case "us-west-1":
+			awsRegion = Regions.US_WEST_1;
+			break;
+		case "us-west-2":
+			awsRegion = Regions.US_WEST_2;
+			break;
+		case "ap-south-1":
+			awsRegion = Regions.AP_SOUTH_1;
+			break;
+		case "ap-northeast-2":
+			awsRegion = Regions.AP_NORTHEAST_2;
+			break;
+		case "ap-southeast-1":
+			awsRegion = Regions.AP_SOUTHEAST_1;
+			break;
+		case "ap-southeast-2":
+			awsRegion = Regions.AP_SOUTHEAST_2;
+			break;
+		case "ap-northeast-1":
+			awsRegion = Regions.AP_NORTHEAST_1;
+			break;
+		case "ca-central-1":
+			awsRegion = Regions.CA_CENTRAL_1;
+			break;
+		case "cn-north-1":
+			awsRegion = Regions.CN_NORTH_1;
+			break;
+		case "eu-central-1":
+			awsRegion = Regions.EU_CENTRAL_1;
+			break;
+		case "eu-west-1":
+			awsRegion = Regions.EU_WEST_1;
+			break;
+		case "eu-west-2":
+			awsRegion = Regions.EU_WEST_2;
+			break;
+		case "sa-east-1":
+			awsRegion = Regions.SA_EAST_1;
+			break;
+		}
+		return awsRegion;
+
+	}
+
+	private List<String> createTableCustom(String tableName, CreateTableRequest awsrequest, DynamoDB dynamoDB) {
 		List<String> output = new ArrayList<String>();
 		try {
+			logger.info(awsrequest.toString());
 			logger.info("Creating the table: " + tableName + ", wait...");
-			Table table = dynamoDB.createTable(tableName, listCl, listDT, new ProvisionedThroughput(10L, 10L));
+			Table table = dynamoDB.createTable(awsrequest);
 			table.waitForActive();
 			output.add("Table created successfully");
 			output.add(tableName);
@@ -111,10 +218,14 @@ public class CreateTableServlet extends HttpServlet {
 		return output;
 	}
 
-	private static List<String> createTable(String json, DynamoDB dynamoDB) {
+	private static List<String> createTable(String json, DynamoDB dynamoDB, long readCapacity, long writeCapacity,
+			ProjectionType projectedAttr, boolean isIndex, boolean isCapaity, String nonkeyAttr) {
+		List<KeySchemaElement> indexkey = new ArrayList<KeySchemaElement>();
+		String indexName = "";
 		List<String> output = new ArrayList<String>();
 		try {
 			String tableName = "";
+			String tableSetting = "default";
 			List<KeySchemaElement> listCl = new ArrayList<KeySchemaElement>();
 			List<AttributeDefinition> listDT = new ArrayList<AttributeDefinition>();
 			JSONArray jsonRules = new JSONArray(json);
@@ -123,6 +234,7 @@ public class CreateTableServlet extends HttpServlet {
 			for (int i = 0; i < jsonRules.length(); i++) {
 				JSONObject obj = (JSONObject) jsonRules.get(i);
 				tableName = obj.get("tableName").toString();
+				tableSetting = obj.get("tableSetting").toString();
 				JSONArray PartitionRules = new JSONArray(obj.get("partition").toString());
 				for (int j = 0; j < PartitionRules.length(); j++) {
 					JSONObject columnobj = (JSONObject) PartitionRules.get(j);
@@ -145,48 +257,115 @@ public class CreateTableServlet extends HttpServlet {
 						listDT.add(dt);
 					}
 				}
-				JSONArray SortingRules = new JSONArray(obj.get("sorting").toString());
-				for (int j = 0; j < SortingRules.length(); j++) {
-					JSONObject columnobj = (JSONObject) SortingRules.get(j);
-					String key = columnobj.getString("key");
-					String dataType = columnobj.getString("dataType");
-					if (dataType.equals("number")) {
-						ckey = new KeySchemaElement(key, KeyType.RANGE);
-						dt = new AttributeDefinition(key, ScalarAttributeType.N);
-					} else if (dataType.equals("string")) {
-						ckey = new KeySchemaElement(key, KeyType.RANGE);
-						dt = new AttributeDefinition(key, ScalarAttributeType.S);
-					} else if (dataType.equals("bytebuffer")) {
-						ckey = new KeySchemaElement(key, KeyType.RANGE);
-						dt = new AttributeDefinition(key, ScalarAttributeType.B);
+				if (obj.has("sorting")) {
+					JSONArray SortingRules = new JSONArray(obj.get("sorting").toString());
+					for (int j = 0; j < SortingRules.length(); j++) {
+						JSONObject columnobj = (JSONObject) SortingRules.get(j);
+						String key = columnobj.getString("key");
+						String dataType = columnobj.getString("dataType");
+						if (dataType.equals("number")) {
+							ckey = new KeySchemaElement(key, KeyType.RANGE);
+							dt = new AttributeDefinition(key, ScalarAttributeType.N);
+						} else if (dataType.equals("string")) {
+							ckey = new KeySchemaElement(key, KeyType.RANGE);
+							dt = new AttributeDefinition(key, ScalarAttributeType.S);
+						} else if (dataType.equals("bytebuffer")) {
+							ckey = new KeySchemaElement(key, KeyType.RANGE);
+							dt = new AttributeDefinition(key, ScalarAttributeType.B);
+						}
+						if (ckey != null) {
+							listCl.add(ckey);
+						}
+						if (dt != null) {
+							listDT.add(dt);
+						}
 					}
-					if (ckey != null) {
-						listCl.add(ckey);
+				}
+				if (!tableSetting.equals("default")) {
+					if (obj.get("globalindexes") != null) {
+						isIndex = true;
+						List<AttributeDefinition> indexdt = new ArrayList<AttributeDefinition>();
+						JSONArray indexRules = new JSONArray(obj.get("globalindexes").toString());
+						for (int j = 0; j < indexRules.length(); j++) {
+							JSONObject columnobj = (JSONObject) indexRules.get(j);
+							indexName = columnobj.getString("name");
+							projectedAttr = getProjectedAttr(columnobj.getString("projectedAttr"));
+							String partitionkey = "";
+							if (columnobj.has("partitionkey")) {
+								partitionkey = columnobj.getString("partitionkey");
+							}
+							String partitiondataType = "";
+							if (columnobj.has("partitiondataType")) {
+								partitiondataType = columnobj.getString("partitiondataType");
+							}
+							String sortingkey = "";
+							if (columnobj.has("sortingkey")) {
+								sortingkey = columnobj.getString("sortingkey");
+							}
+							String sortingdataType = "";
+							if (columnobj.has("sortingdataType")) {
+								sortingdataType = columnobj.getString("sortingdataType");
+							}
+							if (columnobj.has("nonkeyAttr")) {
+								nonkeyAttr = columnobj.getString("nonkeyAttr");
+							}
+							if (!partitionkey.isEmpty() && partitionkey != null) {
+								KeySchemaElement pkey = new KeySchemaElement(partitionkey, KeyType.HASH);
+								AttributeDefinition pdt = new AttributeDefinition(partitionkey,
+										getKeyType(partitiondataType));
+								indexkey.add(pkey);
+								indexdt.add(pdt);
+							}
+							if (!sortingkey.isEmpty() && sortingkey != null) {
+								KeySchemaElement skey = new KeySchemaElement(sortingkey, KeyType.RANGE);
+								AttributeDefinition sdt = new AttributeDefinition(sortingdataType,
+										getKeyType(partitiondataType));
+								indexkey.add(skey);
+								indexdt.add(sdt);
+							}
+						}
 					}
-					if (dt != null) {
-						listDT.add(dt);
+
+					if (obj.get("capacity") != null) {
+						isCapaity = true;
+						JSONArray capacityRule = new JSONArray(obj.get("capacity").toString());
+						for (int j = 0; j < capacityRule.length(); j++) {
+							JSONObject columnobj = (JSONObject) capacityRule.get(j);
+							readCapacity = Long.parseLong(columnobj.getString("read"));
+							writeCapacity = Long.parseLong(columnobj.getString("write"));
+						}
+
 					}
 				}
 
-				/*
-				 * JSONArray columnjsonRules = new JSONArray(obj.get("keys").toString()); for
-				 * (int j = 0; j < columnjsonRules.length(); j++) { JSONObject columnobj =
-				 * (JSONObject) columnjsonRules.get(j); Iterator<String> keys =
-				 * columnobj.keys(); while (keys.hasNext()) { logger.info((String) keys.next());
-				 * System.out.println((String) keys.next()); String key = (String) keys.next();
-				 * String value = columnobj.getString(key); AttributeDefinition dt = null;
-				 * KeySchemaElement ckey = null; if (value.equals("number")) { ckey = new
-				 * KeySchemaElement(key, KeyType.HASH); dt = new AttributeDefinition(key,
-				 * ScalarAttributeType.N); } else if (value.equals("string")) { ckey = new
-				 * KeySchemaElement(key, KeyType.RANGE); dt = new AttributeDefinition(key,
-				 * ScalarAttributeType.S); } else if (value.equals("bytebuffer")) { ckey = new
-				 * KeySchemaElement(key, KeyType.RANGE); dt = new AttributeDefinition(key,
-				 * ScalarAttributeType.B); } if (ckey != null) { listCl.add(ckey); } if (dt !=
-				 * null) { listDT.add(dt); } } }
-				 */
 			}
+			CreateTableRequest request = new CreateTableRequest().withTableName(tableName).withKeySchema(listCl)
+					.withAttributeDefinitions(listDT);
+			if (isCapaity) {
+				request.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(readCapacity)
+						.withWriteCapacityUnits(writeCapacity));
+			}
+			if (isIndex) {
+				GlobalSecondaryIndex precipIndex = new GlobalSecondaryIndex().withIndexName(indexName)
+						.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits((long) 10)
+								.withWriteCapacityUnits((long) 1));
+				if (!nonkeyAttr.isEmpty()) {
+					precipIndex.withProjection(
+							new Projection().withProjectionType(projectedAttr).withNonKeyAttributes(nonkeyAttr));
+				} else {
+					precipIndex.withProjection(new Projection().withProjectionType(projectedAttr));
+				}
+				ArrayList<KeySchemaElement> indexKeySchema = new ArrayList<KeySchemaElement>();
+				indexKeySchema.add(indexkey.get(0)); // Partition key
+				if (indexkey.size() > 1) {
+					indexKeySchema.add(indexkey.get(1)); // Sort key
+				}
+				precipIndex.setKeySchema(indexKeySchema);
+				request.withGlobalSecondaryIndexes(precipIndex);
+			}
+			logger.info(request.toString());
 			logger.info("Creating the table: " + tableName + ", wait...");
-			Table table = dynamoDB.createTable(tableName, listCl, listDT, new ProvisionedThroughput(10L, 10L));
+			Table table = dynamoDB.createTable(request);
 			table.waitForActive();
 			output.add("Table created successfully");
 			output.add(tableName);
@@ -194,6 +373,28 @@ public class CreateTableServlet extends HttpServlet {
 			output.add(e.getMessage());
 		}
 		return output;
+	}
+
+	private static ProjectionType getProjectedAttr(String projectedAttr) {
+		// TODO Auto-generated method stub
+		ProjectionType attr = ProjectionType.ALL;
+		if (projectedAttr.equalsIgnoreCase("include")) {
+			attr = ProjectionType.INCLUDE;
+		} else if (projectedAttr.equalsIgnoreCase("key_only")) {
+			attr = ProjectionType.KEYS_ONLY;
+		}
+		return attr;
+	}
+
+	private static ScalarAttributeType getKeyType(String partitiondataType) {
+		ScalarAttributeType type = ScalarAttributeType.B;
+		if (partitiondataType.equals("number")) {
+			type = ScalarAttributeType.N;
+		} else if (partitiondataType.equals("string")) {
+			type = ScalarAttributeType.S;
+		}
+		return type;
+
 	}
 
 }
