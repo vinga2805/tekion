@@ -7,9 +7,10 @@ autoscaling:
 envProperties:
   MYSQLDB: teslatest
   MYSQLHOST: mydb-mysql
-  MYSQLPASS: Alfa@123
   MYSQLPORT: '3306'
-  MYSQLUNAME: root
+secret:
+  password: QWxmYUAxMjMK
+  user: cm9vdAo=
 extraPorts:
 - name: metrics
   port: 9012
