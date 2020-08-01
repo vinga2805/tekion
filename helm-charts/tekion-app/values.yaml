@@ -8,6 +8,8 @@ envProperties:
   MYSQLDB: teslatest
   MYSQLHOST: mydb-mysql
   MYSQLPORT: '3306'
+  MYSQLUNAME: root
+  MYSQLPASS: Alfa@123
 extraPorts:
 - name: metrics
   port: 9012
@@ -37,7 +39,7 @@ podSecurityContext: {}
 replicaCount: 1
 resources: {}
 secret:
-  password: QWxmYUAxMjMK
+  password: QWxmYUAxMjM=
   user: cm9vdAo=
 securityContext: {}
 service:

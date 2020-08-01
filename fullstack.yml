@@ -1,6 +1,9 @@
 ---
 - hosts: localhost
   become: true
+  vars:
+     namespace: tesla
+
   tasks:
     - name: Check if kubectl is installed
       command: kubectl version --short
@@ -40,35 +43,69 @@
       with_items:
            - python-pip
            - python3-pip
-
+    - name: Install pip packages
+      pip: 
+        name: "{{ item }}"
+      with_items:
+           - boto
+           - boto3
     - name: Create namespace
       command: kubectl create ns tesla
       become_user: ubuntu
       ignore_errors: yes
-
+    - name: Installing nginx ingress controller
+      shell: helm install nginx-ingress helm-charts/nginx-ingress
+      become_user: ubuntu
+      ignore_errors: yes
     - name: Install ElastiSearchhelm chart from a git repo
-      shell: helm install es elasticsearch -n tesla
+      shell: helm install es helm-charts/logging/elasticsearch -n tesla
       become_user: ubuntu
-
+      ignore_errors: yes
     - name: Install Kibana chart from a git repo
-      shell: helm install kibana kibana -n tesla
+      shell: helm install kibana helm-charts/logging/kibana -n tesla
       become_user: ubuntu
-
+      ignore_errors: yes
     - name: Install prometheus chart from a git repo
-      shell: helm install prometheus prometheus -n tesla
+      shell: helm install prometheus helm-charts/monitoring/prometheus -n tesla
       become_user: ubuntu
+      ignore_errors: yes
     - name: Install grafana chart from a git repo
-      shell: helm install grafana grafana -n tesla
+      shell: helm install grafana helm-charts/monitoring/grafana -n tesla
       become_user: ubuntu
+      ignore_errors: yes
     - name: Install mysql chart from a git repo
-      shell: helm install mydb mysql -n tesla
+      shell: helm install mydb helm-charts/mysql -n tesla
       become_user: ubuntu
+      ignore_errors: yes
+    - name: waiting for mysqldb to come
+      pause:
+         minutes: 1
     - name: Install tekion chart from a git repo
-      shell: helm install tekion tekion-app -n tesla
+      shell: helm install tekion helm-charts/tekion-app -n tesla
       become_user: ubuntu
+      ignore_errors: yes
+
     - name: Install ingress 
       shell: kubectl apply -f ingress.yaml -n tesla
       become_user: ubuntu
+    - elb_classic_lb_facts:
+        region: ap-south-1
+      register: elb_facts
+    - name: Updting route 53 enties
+      route53:
+          state: present
+          zone: vinga.tk
+          record: "{{ item }}"
+          type: A
+          value: "{{ elb_facts.elbs[0].canonical_hosted_zone_name }}"
+          alias: True
+          alias_hosted_zone_id: "{{ elb_facts.elbs[0].canonical_hosted_zone_name_id }}"
+          overwrite: yes
+      with_items:
+           - prometheus.vinga.tk
+           - grafana.vinga.tk
+           - kibana.vinga.tk
+           - tekion.vinga.tk
 
 
 
