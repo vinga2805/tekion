@@ -1,4 +1,5 @@
 def pomPath = "app/pom.xml"
+def valuesRepo = "https://github.com/vinga2805/tekion.git"
 def app = "tekion"
 def repoFullName = "vinga2805/tekion"
 def gitBranch = "master"
@@ -58,9 +59,11 @@ pipeline {
             steps {
                 script {
                     echo "----I AM Executing----"
+                    withCredentials([usernamePassword(credentialsId: 'github_cred', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                     sh """#!/bin/bash -x
                        pip install pyyaml
                        pip install pybump
+                       git clone ${valuesRepo} values-files
                        python update_image.py ${imageFullName}
                     """
                 }            
