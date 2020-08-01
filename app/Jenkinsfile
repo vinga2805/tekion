@@ -60,12 +60,13 @@ pipeline {
                 script {
                     echo "----I AM Executing----"
                     withCredentials([usernamePassword(credentialsId: 'github_cred', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh """#!/bin/bash -x
-                       pip install pyyaml
-                       pip install pybump
-                       git clone ${valuesRepo} values-files
-                       python update_image.py ${imageFullName}
-                    """
+                      sh """#!/bin/bash -x
+                         pip install pyyaml
+                         pip install pybump
+                         git clone ${valuesRepo} values-files
+                         python update_image.py ${imageFullName}
+                      """
+                    }
                 }            
             }       
         }
