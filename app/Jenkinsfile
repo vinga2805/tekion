@@ -12,6 +12,7 @@ pipeline {
                     def version = "${pomVersion}"
                     def lastCommitHash = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%H'").trim()
                     def lastCommitAuthorEmail = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%ae'").trim()
+                    mavenCommand = mvn clean package + " -f " + pomPath
                     if (pomVersion.endsWith("-SNAPSHOT")) {
                         echo "Snapshot version detected"
                         shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
@@ -25,7 +26,7 @@ pipeline {
                         artifactVersion = "${pomVersion}"
                     }
                 }
-                sh 'mvn clean package -f ${pomPath} '
+                sh("${mavenCommand}")
             }
 
         }
