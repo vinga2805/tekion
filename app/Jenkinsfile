@@ -39,6 +39,7 @@ pipeline {
         stage('Publish artifacts'){
             steps{
                 script {
+                    def imageFullName = "${imageFullName}"
                     docker.withRegistry( '', registryCredential ) {
                     dockerImage.push()
                     }              
