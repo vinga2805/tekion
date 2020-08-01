@@ -29,7 +29,6 @@ def pushToBitBucket():
     # repo       = Repo('values-files')
     try:
         commands = """
-            cd values-files && \
             git status && \
             git branch && \
             git diff && \
