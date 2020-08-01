@@ -61,7 +61,7 @@ pipeline {
                     sh """#!/bin/bash -x
                        pip install pyyaml
                        pip install pybump
-                       python app/update_image.py ${imageFullName}
+                       python update_image.py ${imageFullName}
                     """
                 }            
             }       
