@@ -57,6 +57,7 @@
 - Remove the image from Jenkins box
 - Clone the same repo in subdirectory values-files
 - Update the tag in the values.yaml 
+- Bump up the chart version
 - Deploys the application via Helm if its first time otherwise it upgrades the helm chart
 - Perform healthcheck of the application
 - If the Healthcheck passes then it will push the changes in github
