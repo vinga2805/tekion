@@ -8,9 +8,6 @@ envProperties:
   MYSQLDB: teslatest
   MYSQLHOST: mydb-mysql
   MYSQLPORT: '3306'
-secret:
-  password: QWxmYUAxMjMK
-  user: cm9vdAo=
 extraPorts:
 - name: metrics
   port: 9012
@@ -19,7 +16,7 @@ fullnameOverride: ''
 image:
   pullPolicy: IfNotPresent
   repository: vinga2805/tekion
-  tag: snapshot_0.0.1_master_7587e75
+  tag: snapshot_0.0.1_master_4aee9d5
 imagePullSecrets: []
 ingress:
   annotations:
@@ -39,6 +36,9 @@ podAnnotations:
 podSecurityContext: {}
 replicaCount: 1
 resources: {}
+secret:
+  password: QWxmYUAxMjMK
+  user: cm9vdAo=
 securityContext: {}
 service:
   port: 80
