@@ -6,7 +6,7 @@ def gitBranch = "master"
 def registry = "${repoFullName}"
 def registryCredential = 'docker_cred'
 def dockerImage = ''
-def namespave = "tesla"
+def namespace = "tesla"
 pipeline {
     agent any
     stages{
