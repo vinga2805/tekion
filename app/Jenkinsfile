@@ -6,7 +6,7 @@ pipeline {
     stages{
         stage('Build Jar'){
             steps {
-                scripts {
+                script {
                     def pomVersion = readMavenPom(file: "$pomPath").getVersion()
                     def version = "${pomVersion}"
                     def lastCommitHash = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%H'").trim()
