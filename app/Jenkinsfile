@@ -93,7 +93,7 @@ pipeline {
                 script {
                      echo "Wait performing healthcheck...."
                      sh """#!/bin/bash -x
-                        status=`curl -Iks http://tekion.vinga.tk/teslaDyDB/ | head -1 | awk '{print $2}'`
+                        status=`curl -Iks http://tekion.vinga.tk/teslaDyDB/ | head -1 | cut -d " " -f2`
                         if [ $status == "200" ]
                         then 
                         echo "Application healthcheck is successful"
