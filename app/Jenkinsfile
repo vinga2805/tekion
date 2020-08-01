@@ -6,6 +6,7 @@ def gitBranch = "master"
 def registry = "${repoFullName}"
 def registryCredential = 'docker_cred'
 def dockerImage = ''
+def namespave = "tesla"
 pipeline {
     agent any
     stages{
@@ -69,6 +70,38 @@ pipeline {
                     }
                 }            
             }       
+        }
+        stage ('Deploying application'){
+            steps {
+                echo "-----Deploying helm chart"
+                sh """#!/bin/bash -x
+                   if [ `helm list -n ${namespace} | grep ${app} | wc -l` == 1 ]
+                   then 
+                   echo "chart already running"
+                   helm upgrade ${app} values-files/helm-charts/tekion-app/ -n ${namespace}
+                   else 
+                   echo "Chart is not running"
+                   helm install ${app} value-files/helm-charts/tekion-app/ -n ${namespace}
+                   fi
+                """ 
+            }
+        }
+        stage ('health-check') {
+            steps {
+                echo "Wait performing healthcheck...."
+                sh """#!/bin/bash -x
+                   status=`curl -Iks http://tekion.vinga.tk/teslaDyDB/ | head -1 | awk '{print $2}'`
+                   if [ $status == "200" ]
+                   then 
+                   echo "Application healthcheck is successful"
+                   echo "Application deployed successfully"
+                   else
+                   echo "Application healthcheck is unsuccessful."
+                   echo "Rolling back the application..."
+                   helm rollback ${app} -n ${namespace}
+                   fi
+                """
+            }
         }
     }
 }
