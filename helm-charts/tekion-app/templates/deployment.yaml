@@ -34,19 +34,13 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-          - name: MYSQLHOST
-            value: mydb-mysql
-          - name: MYSQLDB
-            value: teslatest
-          - name: MYSQLPASS
-            value: Alfa@123
-          - name: MYSQLUNAME
-            value: root
-          - name: MYSQLPORT
-            value: "3306"
+{{- if .Values.envProperties }}
+          - configMapRef:
+              name: {{ .Chart.Name }}-env-configmap
+{{- end }} 
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
 {{- range $i, $port := .Values.extraPorts }}
             - name: {{ $port.name }}
@@ -62,11 +56,11 @@ spec:
 {{- end }}
           livenessProbe:
             httpGet:
-              path: /teslaDyDB/
+              path: {{ default "/teslaDyDB/healtcheck" .Values.service.healthCheckPath }}
               port: http
           readinessProbe:
             httpGet:
-              path: /teslaDyDB/
+              path: {{ default "/teslaDyDB/healtcheck" .Values.service.healthCheckPath }}
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
