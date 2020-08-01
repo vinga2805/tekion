@@ -49,5 +49,11 @@ pipeline {
                 }
             }
         }
+        stage('Cleaning images from Jenkins') {
+            
+            steps {
+                sh "docker rmi ${imageFullName}"
+            }
+        }
     }
 }
