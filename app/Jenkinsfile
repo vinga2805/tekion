@@ -12,7 +12,7 @@ pipeline {
     stages{
         stage('Clone Repo') {
             steps {
-                git ${valuesRepo}
+                sh "git clone ${valuesRepo}"
             }
         }
         stage('Build Jar'){
