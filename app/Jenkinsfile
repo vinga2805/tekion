@@ -4,6 +4,7 @@ def repoFullName = "vinga2805/tekion"
 def gitBranch = "master"
 def registry = "${repoFullName}"
 def registryCredential = 'docker_cred'
+def dockerImage = ''
 pipeline {
     agent any
     stages{
@@ -33,13 +34,15 @@ pipeline {
         }
         stage('Create image') {
             steps {
-                sh "docker build -t ${imageFullName} ./app/"
+                script {
+                    dockerImage = docker.build "${imageFullName}"
+                }
+                
             }
         }
         stage('Publish artifacts'){
-            steps{
+            steps {
                 script {
-                    def dockerImage = "${imageFullName}"
                     docker.withRegistry( '', registryCredential ) {
                     dockerImage.push()
                     }              
