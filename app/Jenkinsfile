@@ -1,0 +1,118 @@
+def pomPath = "app/pom.xml"
+def valuesRepo = "https://github.com/vinga2805/tekion.git"
+def app = "tekion"
+def repoFullName = "vinga2805/tekion"
+def gitBranch = "master"
+def registry = "${repoFullName}"
+def registryCredential = 'docker_cred'
+def dockerImage = ''
+def namespace = "tesla"
+pipeline {
+    agent any
+    stages{
+        stage('Build Jar'){
+            steps {
+                script {
+                    def pomVersion = readMavenPom(file: "$pomPath").getVersion()
+                    def version = "${pomVersion}"
+                    def lastCommitHash = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%H'").trim()
+                    def lastCommitAuthorEmail = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%ae'").trim()
+                    if (pomVersion.endsWith("-SNAPSHOT")) {
+                        echo "Snapshot version detected"
+                        shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+                        gitBranch = gitBranch.substring(gitBranch.indexOf('/') + 1)
+                        pomVersion = pomVersion.substring(0, pomVersion.indexOf('-'))
+                        imageFullName = "${repoFullName}" + ":" + "snapshot_${pomVersion}_${gitBranch}_${shortCommit}"
+                        artifactVersion = "${pomVersion}-snapshot.${gitBranch}.${shortCommit}"
+                    } else {
+                        echo "Proper release detected"
+                        imageFullName = "${repoFullName}" + ":" + "${pomVersion}"
+                        artifactVersion = "${pomVersion}"
+                    }
+                }
+                sh "mvn clean package -f ${pomPath}"
+            }
+
+        }
+        stage('Create image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${imageFullName}", "./app/")
+                }
+                
+            }
+        }
+        stage('Publish artifacts'){
+            steps {
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                    dockerImage.push()
+                    }              
+                }
+            }
+        }
+        stage('Cleaning images from Jenkins') {         
+            steps {
+                sh "docker rmi ${imageFullName}"
+            }
+        }
+        stage ('Update Image tags in chart repository') {
+            steps {
+                script {
+                    echo "----I AM Executing----"
+                      sh """#!/bin/bash -x
+                         pip install pyyaml
+                         pip install pybump
+                         git clone ${valuesRepo} values-files
+                         python update_image.py ${imageFullName}
+                      """
+                }            
+            }       
+        }
+        stage ('Deploying application'){
+            steps {
+                script {
+                    echo "-----Deploying helm chart"
+                    sh """#!/bin/bash -x
+                       if [ `helm list -n ${namespace} | grep ${app} | wc -l` == 1 ]
+                       then 
+                       echo "chart already running"
+                       helm upgrade ${app} values-files/helm-charts/tekion-app/ -n ${namespace}
+                       else 
+                       echo "Chart is not running"
+                       helm install ${app} value-files/helm-charts/tekion-app/ -n ${namespace}
+                       fi
+                    """ 
+                }
+            }
+        }
+        stage ('health-check') {
+            steps {
+                script {
+                     echo "Wait performing healthcheck...."
+                     withCredentials([usernamePassword(credentialsId: 'github_cred', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                       sh """#!/bin/bash -x
+                          sleep 60
+                          if [ `curl -Iks http://tekion.vinga.tk/teslaDyDB/ | head -1 | cut -d " " -f2` == "200" ]
+                          then 
+                          echo "Application healthcheck is successful"
+                          echo "Application deployed successfully"
+                          cd values-files
+                          git checkout master
+                          git add .
+                          git commit -m "adding updated image"
+                          git push git@github.com:vinga2805/tekion.git 
+                          cd ..
+                          else
+                          echo "Application healthcheck is unsuccessful."
+                          echo "Rolling back the application..."
+                          helm rollback ${app} -n ${namespace}
+                          fi
+                          rm -rf values-files
+                       """
+                     }
+                }
+            }
+        }
+    }
+}
