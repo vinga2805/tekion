@@ -17,7 +17,7 @@ extraPorts:
 fullnameOverride: ''
 image:
   pullPolicy: IfNotPresent
-  repository: vinga2805/tekion-final
+  repository: vinga2805/tekion
   tag: v5 
 imagePullSecrets: []
 ingress:
