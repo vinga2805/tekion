@@ -44,10 +44,9 @@ public class CreateTableServlet extends HttpServlet {
 			throws ServletException, IOException {
 		MysqlDao mysqlDao = new MysqlDao();
 		String userName = request.getParameter("username");
+		String region = request.getParameter("region");
 		List<String> awsCreds = mysqlDao.getAwsCred(userName);
 		BasicAWSCredentials credentials = new BasicAWSCredentials(awsCreds.get(0), awsCreds.get(1));
-		AmazonDynamoDBClient client = new AmazonDynamoDBClient(credentials).withRegion(getRegion(awsCreds.get(2)));
-		DynamoDB dynamoDB = new DynamoDB(client);
 		String status = "fail";
 		if (request.getParameter("ftype").equals("custom")) {
 			List<KeySchemaElement> listCl = new ArrayList<KeySchemaElement>();
@@ -132,15 +131,15 @@ public class CreateTableServlet extends HttpServlet {
 				precipIndex.setKeySchema(indexKeySchema);
 				awsrequest.withGlobalSecondaryIndexes(precipIndex);
 			}
-			List<String> messageList = createTableCustom(tableName, awsrequest, dynamoDB);
+			List<String> messageList = createTableCustom(tableName, awsrequest, credentials, region);
 			logger.info(messageList);
 			if (messageList.get(0).equals("Table created successfully")) {
 				status = mysqlDao.addTable(userName, messageList.get(1));
 			}
 		} else {
 			String jsonData = request.getParameter("jsonTemplate");
-			List<String> messageList = createTable(jsonData, dynamoDB, readCapacity, writeCapacity, projectedAttr,
-					isIndex, isCapaity, nonkeyAttr);
+			List<String> messageList = createTable(jsonData, readCapacity, writeCapacity, projectedAttr, isIndex,
+					isCapaity, nonkeyAttr, credentials);
 			logger.info(messageList);
 			if (messageList.get(0).equals("Table created successfully")) {
 				status = mysqlDao.addTable(userName, messageList.get(1));
@@ -149,7 +148,7 @@ public class CreateTableServlet extends HttpServlet {
 		response.sendRedirect("home?status=" + status);
 	}
 
-	private Regions getRegion(String region) {
+	private static Regions getRegion(String region) {
 		Regions awsRegion = null;
 		// TODO Auto-generated method stub
 		switch (region) {
@@ -203,9 +202,12 @@ public class CreateTableServlet extends HttpServlet {
 
 	}
 
-	private List<String> createTableCustom(String tableName, CreateTableRequest awsrequest, DynamoDB dynamoDB) {
+	private List<String> createTableCustom(String tableName, CreateTableRequest awsrequest,
+			BasicAWSCredentials credentials, String region) {
 		List<String> output = new ArrayList<String>();
 		try {
+			AmazonDynamoDBClient client = new AmazonDynamoDBClient(credentials).withRegion(getRegion(region));
+			DynamoDB dynamoDB = new DynamoDB(client);
 			logger.info(awsrequest.toString());
 			logger.info("Creating the table: " + tableName + ", wait...");
 			Table table = dynamoDB.createTable(awsrequest);
@@ -218,13 +220,16 @@ public class CreateTableServlet extends HttpServlet {
 		return output;
 	}
 
-	private static List<String> createTable(String json, DynamoDB dynamoDB, long readCapacity, long writeCapacity,
-			ProjectionType projectedAttr, boolean isIndex, boolean isCapaity, String nonkeyAttr) {
+	private static List<String> createTable(String json, long readCapacity, long writeCapacity,
+			ProjectionType projectedAttr, boolean isIndex, boolean isCapaity, String nonkeyAttr,
+			BasicAWSCredentials credentials) {
+
 		List<KeySchemaElement> indexkey = new ArrayList<KeySchemaElement>();
 		String indexName = "";
 		List<String> output = new ArrayList<String>();
 		try {
 			String tableName = "";
+			String region = "";
 			String tableSetting = "default";
 			List<KeySchemaElement> listCl = new ArrayList<KeySchemaElement>();
 			List<AttributeDefinition> listDT = new ArrayList<AttributeDefinition>();
@@ -234,6 +239,7 @@ public class CreateTableServlet extends HttpServlet {
 			for (int i = 0; i < jsonRules.length(); i++) {
 				JSONObject obj = (JSONObject) jsonRules.get(i);
 				tableName = obj.get("tableName").toString();
+				region = obj.get("region").toString();
 				tableSetting = obj.get("tableSetting").toString();
 				JSONArray PartitionRules = new JSONArray(obj.get("partition").toString());
 				for (int j = 0; j < PartitionRules.length(); j++) {
@@ -339,6 +345,8 @@ public class CreateTableServlet extends HttpServlet {
 				}
 
 			}
+			AmazonDynamoDBClient client = new AmazonDynamoDBClient(credentials).withRegion(getRegion(region));
+			DynamoDB dynamoDB = new DynamoDB(client);
 			CreateTableRequest request = new CreateTableRequest().withTableName(tableName).withKeySchema(listCl)
 					.withAttributeDefinitions(listDT);
 			if (isCapaity) {

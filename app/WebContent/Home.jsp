@@ -54,11 +54,15 @@ tr:nth-child(even) {
 		var tableName = document.formCustom.tableName.value;
 		var partitionkey = document.formCustom.partitionkey.value;
 		var settingtype = document.formCustom.settingtype.value;
+		var region = document.formCustom.region.value;
 		if (tableName == null || tableName == "" || tableName.length < 2) {
 			alert("TableName must be at least 3 characters");
 			return false;
 		} else if (partitionkey == null || partitionkey == "") {
 			alert("Partition key cannot be blank");
+			return false;
+		} else if (region == null || region == "") {
+			alert("Aws region cannot be blank");
 			return false;
 		}
 		if (settingtype == "custom") {
@@ -79,7 +83,7 @@ tr:nth-child(even) {
 		var customsetting = document.getElementById("customsetting");
 		if (checkBox.checked == true) {
 			customsetting.style.display = "none";
-			document.formCustom.settingtype.value = "defualt";
+			document.formCustom.settingtype.value = "default";
 		} else {
 			customsetting.style.display = "block";
 			document.formCustom.settingtype.value = "custom";
@@ -146,6 +150,27 @@ tr:nth-child(even) {
 					</label> <input type="text" name="tableName"
 						style="margin-top: 10px; margin-bottom: 10px;">
 				</div>
+				<div id="awsregion">
+					<label class="lablediv">Aws Region(<span style="color: red">*</span>)
+						:
+					</label><select id="region" name="region">
+							<option value="">Select Aws Region</option>
+							<option value="us-east-2">US East (Ohio)</option>
+							<option value="us-east-1">US East (N. Virginia)</option>
+							<option value="us-west-1">US West (N. California)</option>
+							<option value="us-west-2">US West (Oregon)</option>
+							<option value="ap-south-1">Asia Pacific (Mumbai)</option>
+							<option value="ap-northeast-2">Asia Pacific (Seoul)</option>
+							<option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+							<option value="ap-southeast-2">Asia Pacific (Sydney)</option>
+							<option value="ap-northeast-1">Asia Pacific (Tokyo)</option>
+							<option value="ca-central-1">Canada (Central)</option>
+							<option value="cn-north-1">China (Beijing)</option>
+							<option value="eu-central-1">Europe (Frankfurt)</option>
+							<option value="eu-west-1">Europe (Ireland)</option>
+							<option value="eu-west-2">Europe (London)</option>
+							<option value="sa-east-1">South America (São Paulo)</option>
+					</select></div>
 				<div id="dynamicInput">
 					<div>
 						<label class="lablediv">Partition Key(<span

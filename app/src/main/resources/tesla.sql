@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS users (
   awssecreteKey varchar(255) DEFAULT NULL,
   createdBy varchar(255) DEFAULT NULL,
   createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  awsregion varchar(255) DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE (userName)
 );

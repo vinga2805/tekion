@@ -8,7 +8,6 @@ public class RegisterBean {
 	private String password;
 	private String accesskey;
 	private String secretkey;
-	private String region;
 
 	public String getUserName() {
 		return userName;
@@ -56,14 +55,6 @@ public class RegisterBean {
 
 	public void setSecretkey(String secretkey) {
 		this.secretkey = secretkey;
-	}
-
-	public String getRegion() {
-		return region;
-	}
-
-	public void setRegion(String region) {
-		this.region = region;
 	}
 
 }

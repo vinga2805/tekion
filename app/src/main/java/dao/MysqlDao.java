@@ -76,12 +76,11 @@ public class MysqlDao {
 		String password = hashPassword(registerBean.getPassword());
 		String accesskey = registerBean.getAccesskey();
 		String secretkey = registerBean.getSecretkey();
-		String region = registerBean.getRegion();
 		Connection con = null;
 		PreparedStatement preparedStatement = null;
 		try {
 			con = DBConnection.createConnection(true);
-			String query = "insert into users(id,fullName,email,userName,password,awsaccessKey,awssecreteKey,awsregion) values (NULL,?,?,?,?,?,?,?)";
+			String query = "insert into users(id,fullName,email,userName,password,awsaccessKey,awssecreteKey) values (NULL,?,?,?,?,?,?)";
 			preparedStatement = con.prepareStatement(query);
 			preparedStatement.setString(1, fullName);
 			preparedStatement.setString(2, email);
@@ -89,7 +88,6 @@ public class MysqlDao {
 			preparedStatement.setString(4, password);
 			preparedStatement.setString(5, accesskey);
 			preparedStatement.setString(6, secretkey);
-			preparedStatement.setString(7, region);
 
 			int i = preparedStatement.executeUpdate();
 
@@ -114,16 +112,13 @@ public class MysqlDao {
 			con = DBConnection.createConnection(true);
 			statement = con.createStatement();
 			resultSet = statement.executeQuery(
-					"select awsaccessKey,awssecreteKey,awsregion from users where userName='" + userName + "'");
+					"select awsaccessKey,awssecreteKey from users where userName='" + userName + "'");
 			while (resultSet.next()) // Until next row is present otherwise it return false
 			{
 				awsAccessKey = resultSet.getString("awsaccessKey"); // fetch the values present in database
 				awsSecreteKey = resultSet.getString("awssecreteKey");
-				awsregion = resultSet.getString("awsregion");
 				awsCred.add(awsAccessKey);
 				awsCred.add(awsSecreteKey);
-				awsCred.add(awsregion);
-
 			}
 
 		} catch (SQLException e) {

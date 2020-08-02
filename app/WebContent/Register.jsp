@@ -14,7 +14,6 @@
 		var conpassword = document.form.conpassword.value;
 		var accesskey = document.form.accesskey.value;
 		var secretKey = document.form.secretKey.value;
-		var region = document.form.region.value;
 
 		if (fullname == null || fullname == "") {
 			alert("Full Name can't be blank");
@@ -80,27 +79,6 @@
 				<tr>
 					<td>Aws Secret Key:</td>
 					<td><input type="password" name="secretKey" /></td>
-				</tr>
-
-				<tr>
-					<td>Aws Region:</td>
-					<td><select id="region" name="region">
-							<option value="us-east-2">US East (Ohio)</option>
-							<option value="us-east-1">US East (N. Virginia)</option>
-							<option value="us-west-1">US West (N. California)</option>
-							<option value="us-west-2">US West (Oregon)</option>
-							<option value="ap-south-1">Asia Pacific (Mumbai)</option>
-							<option value="ap-northeast-2">Asia Pacific (Seoul)</option>
-							<option value="ap-southeast-1">Asia Pacific (Singapore)</option>
-							<option value="ap-southeast-2">Asia Pacific (Sydney)</option>
-							<option value="ap-northeast-1">Asia Pacific (Tokyo)</option>
-							<option value="ca-central-1">Canada (Central)</option>
-							<option value="cn-north-1">China (Beijing)</option>
-							<option value="eu-central-1">Europe (Frankfurt)</option>
-							<option value="eu-west-1">Europe (Ireland)</option>
-							<option value="eu-west-2">Europe (London)</option>
-							<option value="sa-east-1">South America (São Paulo)</option>
-					</select></td>
 				</tr>
 				<tr>
 					<td><%=(request.getAttribute("errMessage") == null) ? "" : request.getAttribute("errMessage")%></td>
