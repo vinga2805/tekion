@@ -1,4 +1,5 @@
 # Solution
+## Assignment -I
 ## One time setup automation
 ### Requirements
 - ansible version > 2.9
@@ -63,8 +64,43 @@
 - If the Healthcheck passes then it will push the changes in github
 - If the Healthcheck fails it performs rollback via helm.
 
+## Assignment -II
 
+### Requirements
+- ansible version > 2.9
+- Route53 entry vinga.tk
+- Terraform version 0.12 
+### steps:
 
+``` git clone https://github.com/vinga2805/tekion.git ```
+``` cd mongodb-terraform-ansible-automation/terraform```
+- Enter the in variables.tf
+  - quora count
+  - instance type
+``` terraform init ```
+``` terraform apply ```
+``` cd ../ansible/ ```
+``` vi hosts.yml ```
+- make changes as per infrastrure like 
+  - cluser_size: 3/5
+  - delay: (for delay replication)
+  - MongoDB version
+``` openssl rand -base64 756 > roles/security/files/mongo-keyfile ```
+``` ansible-playbook playbook-full-configuration.yml ```
+
+### Whats included ?
+- Create number of mongoDB servers based on qoura count (number = quora + 2)
+- Ansible will provison
+  - MongoDB replication based on cluser_size, default(5) nodes (1-master, 2-slaves, 1-arbiter, 1-Delayed nodes)
+  - TLS certifcate
+  - Install and start monitoring server (pmm)
+  - Monitoring url
+  - http://mongo-arbiter.vinga.tk:8080/
+  
+### Verify
+```mongo "mongodb://mongo-master.vinga.tk:27017,mongo-slave1.vinga.tk:27017,mongo-slave2.vinga.tk:27017/main?replicaSet=rs0" --ssl --username main-user --password```
+
+  
 
 
 
