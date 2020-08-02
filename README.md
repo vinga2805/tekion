@@ -85,7 +85,7 @@
   - cluser_size: 3/5
   - delay: (for delay replication)
   - MongoDB version
-``` openssl rand -base64 756 > roles/security/files/mongo-keyfile
+``` openssl rand -base64 756 > roles/security/files/mongo-keyfile ```
 ``` ansible-playbook playbook-full-configuration.yml ```
 
 ### Whats included ?
