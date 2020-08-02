@@ -94,6 +94,9 @@
   - MongoDB replication based on cluser_size, default(5) nodes (1-master, 2-slaves, 1-arbiter, 1-Delayed nodes)
   - TLS certifcate
   - Install and start monitoring server (pmm)
+  - Monitoring url
+  - http://mongo-arbiter.vinga.tk:8080/
+  
 ### Verify
 ```mongo "mongodb://mongo-master.vinga.tk:27017,mongo-slave1.vinga.tk:27017,mongo-slave2.vinga.tk:27017/main?replicaSet=rs0" --ssl --username main-user --password```
 
