@@ -1,0 +1,13 @@
+- hosts: mongodb
+  remote_user: "{{ remote_user }}"
+  become: yes
+  roles:
+    - prepare-host
+    - security
+    - mongodb
+
+- hosts: primary
+  remote_user: "{{ remote_user }}"
+  become: yes
+  roles:
+    - replica-set
