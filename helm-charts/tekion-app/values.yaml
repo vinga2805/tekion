@@ -18,7 +18,7 @@ fullnameOverride: ''
 image:
   pullPolicy: IfNotPresent
   repository: vinga2805/tekion
-  tag: snapshot_0.0.1_master_11b73d1
+  tag: snapshot_0.0.1_master_7a70b65
 imagePullSecrets: []
 ingress:
   annotations:
