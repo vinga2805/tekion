@@ -1,4 +1,4 @@
-cnf = {_id: 'rs0', members: [{_id: 0, host: 'mongo-master.vinga.tk:27017'}, {_id: 1, host: 'mongo-slave1.vinga.tk:27017'}, {_id: 2, host: 'mongo-slave2.vinga.tk:27017'}, {_id: 4, host: 'mongo-delayed.vinga.tk:27017', priority: 0, hidden: true, slaveDelay: 3000}, {_id: 5, host: 'mongo-arbiter.vinga.tk:27017'}]}
+cnf = {_id: 'rs0', members: [{_id: 0, host: 'mongo-master.vinga.tk:27017'}, {_id: 1, host: 'mongo-slave1.vinga.tk:27017'}, {_id: 2, host: 'mongo-delayed.vinga.tk:27017', priority: 0, hidden: true, slaveDelay: {{ slave_delay }}}, {_id: 3, host: 'mongo-slave2.vinga.tk:27017'},  {_id: 4, host: 'mongo-arbiter.vinga.tk:27017', arbiterOnly: true}]}
 rs.reconfig(cnf)
 rs.conf()
 
