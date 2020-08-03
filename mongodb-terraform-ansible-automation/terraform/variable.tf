@@ -18,12 +18,12 @@ variable "ami" {
 
 variable "quora" {
   description = "Please enter the quora count"
-  default = "3"
+  default = "5"
 }
 variable "mongo_names" {
   description = "Please mention the list of arbiter and delayed nodes"
   type        = list
-  default     = ["master","slave1","slave2"]
+  default     = ["master","slave1","slave2","slave3","slave4"]
 }
 #--------------------------------------------------------------
 # Network
