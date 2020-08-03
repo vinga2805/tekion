@@ -63,6 +63,7 @@
 - Perform healthcheck of the application
 - If the Healthcheck passes then it will push the changes in github
 - If the Healthcheck fails it performs rollback via helm.
+- Use sample dynamoDB template to test the application
 
 ## Assignment -II
 
@@ -77,15 +78,22 @@
 - Enter the in variables.tf
   - quora count
   - instance type
+
 ``` terraform init ```
+
 ``` terraform apply ```
+
 ``` cd ../ansible/ ```
+
 ``` vi hosts.yml ```
-- make changes as per infrastrure like 
+
+- make changes in hosts.yml as per infrastrure 
   - cluser_size: 3/5
   - delay: (for delay replication)
   - MongoDB version
+
 ``` openssl rand -base64 756 > roles/security/files/mongo-keyfile ```
+
 ``` ansible-playbook playbook-full-configuration.yml ```
 
 ### Whats included ?
@@ -98,6 +106,7 @@
   - http://mongo-arbiter.vinga.tk:8080/
   
 ### Verify
+
 ```mongo "mongodb://mongo-master.vinga.tk:27017,mongo-slave1.vinga.tk:27017,mongo-slave2.vinga.tk:27017/main?replicaSet=rs0" --ssl --username main-user --password```
 
   
