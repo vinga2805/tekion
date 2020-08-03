@@ -1,0 +1,70 @@
+Json Template example:
+
+============DEFAULT SETTINGS==================
+[
+  {
+      "tableName": "product_default",
+      "region" : "us-east-1",
+      "partition": [
+         {
+            "key": "id",
+            "dataType": "number"   
+      }  
+    ],
+      "sorting": [
+         {
+            "key": "name",
+            "dataType": "string"   
+      }  
+    ],
+"tableSetting":"default"  
+  }
+]
+
+================CUSTOM SETTING===================
+
+[
+   {
+      "tableName":"product_custom",
+      "region" : "us-east-1",
+      "partition":[
+         {
+            "key":"id",
+            "dataType":"number"
+         
+}
+      
+],
+      "sorting":[
+         {
+            "key":"name",
+            "dataType":"string"
+         
+}
+      
+],
+      "tableSetting":"custom",
+      "globalindexes":[
+         {
+            "name":"globalindex",
+            "projectedAttr":"ALL",
+            "nonkeyAttr":"",
+            "partitionkey":"id",
+            "partitiondataType":"number",
+            "sortingkey":"name",
+            "sortingdataType":"string"
+         
+}
+      
+],
+      "capacity":[
+         {
+            "read":"10",
+            "write":"10"
+         
+}
+      
+]
+   
+}
+]
