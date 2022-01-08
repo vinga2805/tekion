@@ -3,8 +3,8 @@ pipeline {
     stages{
         stage('Build'){
             steps{
-                sh 'mvn clean package'
-                sh "docker build . -t tekion:${env.BUILD_ID}"
+                sh 'mvn clean package -f tekion/app/'
+                sh "docker build . -t tekion:${env.BUILD_ID} -f tekion/app/Dockerfile"
             }
         }
         stage('Deploy on container'){
